@@ -1,4 +1,3 @@
-import zipfile
 from filemanagement.functions import *
 from enum import Enum
 
@@ -23,6 +22,11 @@ class ExcelSheet():
         """ Return if the sheet is protected """
         return self.is_protected
     
+    def get_file_state(self) -> str:
+        if self.is_protected:
+            return "PROTECTED"
+        return "UNPROTECTED" 
+    
     def get_filename_path(self)-> str:
         """ Return the file path in the zipfile """
         return self.filename_path
@@ -31,16 +35,19 @@ class ExcelSheet():
         """ return the sheet data """
         return self.file_data
     
-    def remove_protection(self)-> ResultState:
+    def remove_protection(self)-> str:
         """ Remove the sheet protection and return a status code """
         if (self.is_protected):
-            self.file_data = remove_range_substring(self.file_data, '<sheetProtection', '/>')
-            return ResultState.WORKED
+            self.file_data = remove_range_substring(self.file_data,\
+                                                     '<sheetProtection', '/>')
+            self.is_protected = False
+            return 'Protection removed successfully. '
 
-        return ResultState.NOT_PROTECTED
+        return 'File already unprotected, try another file. '
     
     def check_protection(self) -> bool:
-        """ Check if the cheet is protected and change the object is_protected variable to reflect that """
+        """ Check if the cheet is protected and change the object \n
+        is_protected variable to reflect that """
         start_index = self.file_data.find('<sheetProtection')
         if start_index == -1:
             return False  # Substring not found
