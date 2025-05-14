@@ -43,4 +43,10 @@ def validate_choice(choice:str, range_of:int) -> bool:
           return True
 
     return False 
-    
+
+def update_file(zip_filename:str, excel_list):
+    with zipfile.ZipFile(zip_filename, mode='w') as excel_zipfile:
+        for excel_file in excel_list:
+            with excel_zipfile.open(excel_file.get_filename_path(), 'w') \
+              as sheet:
+                sheet.write(excel_file.execute_change())

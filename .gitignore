@@ -24,6 +24,12 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+backup/
+./excel_sheet/
+./excel_sheet/*.xlsx
+excel
+test
+test.xlsx
 MANIFEST
 
 # PyInstaller
