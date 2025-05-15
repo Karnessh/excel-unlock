@@ -1,0 +1,7 @@
+- remove the enum import from objects 
+- don't check file protection of file of type none
+- Remove the get_file_data_byte function from the Excelsheet class
+- Add removal protection flag
+- Remove flag when protection removal is done
+- Add column title to the menu
+- Script exit if the file is not a valid one

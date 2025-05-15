@@ -30,6 +30,7 @@ backup/
 excel
 test
 test.xlsx
+excel1.xlsx
 MANIFEST
 
 # PyInstaller

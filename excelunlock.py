@@ -1,19 +1,26 @@
 import zipfile
 import os
+import sys
 from filemanagement.functions import *
 from filemanagement.objects import *
 from typing import List
 
 excelfile_list: List[ExcelSheet] = []
 menu: List[ExcelSheet] = []
-version_number:str = '0.1'
+version_number:str = '0.2'
+os_clear = ''
 
-# To be change later depending on the os running the app
-os.system('cls')
-#print(os.name)
+# Checking which os is running the script to know which command to use to clear
+# the screen
+if os.name == 'nt':
+    os_clear = 'cls'
+else:
+    os_clear = 'clear'
+
+os.system(os_clear)
 
 print(f'Welcome to the Excel protection remover script ver {version_number}')
-print('Enter the name of the file you want to unlock :', end='')
+print('Enter the name of the file you want to unlock : ', end='')
 
 #filename = input()
 # Not asking the filename for testing purposes
@@ -31,18 +38,17 @@ if zipfile.is_zipfile(zip_filename):
             excelfile_list.append(ExcelSheet(list,filedata))
            
 else:
-    print(zip_filename + ' is not a zipfile')
-
+    print(zip_filename + ' is not a zipfile\n')
+    sys.exit()
 # Creating interface
-choice = ""
-
+choice = ''
 while (choice != "Q") and (choice != "q"):
-    os.system("cls")
+    os.system(os_clear)
 
         # Create menu to work with the files
 
     print(f'\nList of excel sheets currently protected in {zip_filename}\n')
-
+    print(f'  -Type-      | -Protection-      |   -Filename-')
     x = 1
     for excel_sheet in excelfile_list:
         if excel_sheet.print_menuitem(x):
@@ -62,6 +68,7 @@ protection : ', end='')
         message = menu[int(choice) - 1].set_for_removal()
     elif (choice == "X") or (choice == "x"):
         update_file(zip_filename, excelfile_list)
+        message = 'File written successfully. '
     elif (choice == "Q") or (choice == "q"):
         continue
     else:
