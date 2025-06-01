@@ -31,6 +31,7 @@ excel
 test
 test.xlsx
 excel1.xlsx
+excel_unlock.code-workspace
 MANIFEST
 
 # PyInstaller
