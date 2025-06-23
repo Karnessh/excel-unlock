@@ -1,22 +1,24 @@
-from filemanagement.functions import *
+import zipfile
 
 class ExcelSheet():
 
     file_type:str = ""
-    is_protected:bool = False
-    is_for_protection_removal:bool = False
     filename_path:str = ''
     file_data:str = ''
+    index:int = 0
+    is_protected:bool = False
+    is_for_protection_removal:bool = False
     protection_string:str = ''
     removal:str = ''
     
 
-    def __init__(self, filename_path:str, file_data:str) -> None:
+    def __init__(self, filename_path:str, file_data:str , fromIndex = 0) -> None:
         """ Initializing class and checking sheet protection """
         self.filename_path = filename_path
         self.file_data = file_data
         self.file_type = self.check_file_type()
         self.is_protected = self.check_protection()
+        self.index = fromIndex
 
     def get_is_protected(self)-> bool:
         """ Return if the sheet is protected """
@@ -44,13 +46,33 @@ class ExcelSheet():
         """ return if the sheet is set for protection removal """
         return self.is_for_protection_removal
     
-    def set_for_removal(self) -> str:
+    def get_file_info(self)-> tuple:
+        setForRemoval = "No"
+        if self.get_is_for_protection_removal():
+            setForRemoval = "Yes"
+        if not self.get_is_protected():
+            setForRemoval = "N/A"
+        value = (self.get_file_type(),
+                '', 
+                self.get_filename_path(), 
+                self.get_file_state(),
+                setForRemoval)
+        return value
+    
+    def getIndex(self):
+        return self.index
+    
+    def set_for_removal(self) -> tuple:
         """ Flag the sheet for protection removal"""
+        filePathName = self.get_filename_path()
         if (self.is_protected):
             self.is_for_protection_removal = True
-            return 'Protection is set to be removed. '
+            return (True, f'{filePathName} is flagged to be unprotected')
         
-        return 'File is already unprotected. '
+        return (False, f'{filePathName} is already unprotected')
+    
+    def setIndex(self, index):
+        self.index = index
         
     def execute_change(self)-> bytes:
         """ Remove the sheet protection and return a status code """
@@ -105,3 +127,44 @@ class ExcelSheet():
             return True
         else:
             return False
+
+def remove_range_substring(string_to_strip :str, start_substring:str,\
+                            end_substring:str) -> str:
+    """
+    Finds and removes the string between the start_substring and the \n
+    end_substring and the the substring themself
+
+    Args:
+      string_to_strip: The original string.
+      start_substring: The first substring to occurence to find.
+      end_substring: The next substring to find
+
+    Returns:
+      A new string with the substring removed, or the original string if the
+      substring is not found.
+    """
+    start_index = string_to_strip.find(start_substring)
+    if start_index == -1:
+        return string_to_strip  # Substring not found
+    end_index = string_to_strip.find(end_substring, start_index)
+    if end_index == -1:
+        return string_to_strip  # Substring not found
+    
+
+    return string_to_strip[:start_index] + \
+          string_to_strip[end_index + len(end_substring):]
+
+def validate_choice(choice:str, range_of:int) -> bool:
+    if choice.isdigit():
+        if (int(choice) > 0) and (int(choice) < range_of + 1):
+          return True
+
+    return False 
+
+def update_file(zip_filename:str, excel_list):
+    with zipfile.ZipFile(zip_filename, mode='w') as excel_zipfile:
+        for excel_file in excel_list:
+            with excel_zipfile.open(excel_file.get_filename_path(), 'w') \
+              as sheet:
+                sheet.write(excel_file.execute_change())
+
