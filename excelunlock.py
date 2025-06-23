@@ -1,8 +1,7 @@
 import zipfile
 import os
 import sys
-from filemanagement.functions import *
-from filemanagement.objects import *
+from excel_unlock.models import *
 from typing import List
 
 excelfile_list: List[ExcelSheet] = []
@@ -66,6 +65,7 @@ protection : ', end='')
     message = ''
     if validate_choice(choice, len(menu)):
         message = menu[int(choice) - 1].set_for_removal()
+        message = message[1]
     elif (choice == "X") or (choice == "x"):
         update_file(zip_filename, excelfile_list)
         message = 'File written successfully. '
