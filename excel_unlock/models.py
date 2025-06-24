@@ -4,6 +4,8 @@ class ExcelSheet():
 
     file_type:str = ""
     filename_path:str = ''
+    sheetName:str = ''
+    sheetNumber:int = 0
     file_data:str = ''
     index:int = 0
     is_protected:bool = False
@@ -12,14 +14,22 @@ class ExcelSheet():
     removal:str = ''
     
 
-    def __init__(self, filename_path:str, file_data:str , fromIndex = 0) -> None:
+    def __init__(self, filename_path:str, file_data:str , 
+                 fromIndex = 0) -> None:
         """ Initializing class and checking sheet protection """
         self.filename_path = filename_path
         self.file_data = file_data
         self.file_type = self.check_file_type()
         self.is_protected = self.check_protection()
         self.index = fromIndex
+        if self.file_type == 'worksheet':
+            self.findSheetNumber()
 
+    def findSheetNumber(self):
+        result = self.filename_path.split('.')
+        self.sheetNumber = int(result[0][19:])
+        print(self.sheetNumber)
+    
     def get_is_protected(self)-> bool:
         """ Return if the sheet is protected """
         return self.is_protected
@@ -42,6 +52,9 @@ class ExcelSheet():
         """ return the sheet data """
         return self.file_type
     
+    def getSheetNumber(self)->str:
+        return str(self.sheetNumber)
+    
     def get_is_for_protection_removal(self):
         """ return if the sheet is set for protection removal """
         return self.is_for_protection_removal
@@ -53,7 +66,7 @@ class ExcelSheet():
         if not self.get_is_protected():
             setForRemoval = "N/A"
         value = (self.get_file_type(),
-                '', 
+                self.sheetName, 
                 self.get_filename_path(), 
                 self.get_file_state(),
                 setForRemoval)
@@ -73,6 +86,9 @@ class ExcelSheet():
     
     def setIndex(self, index):
         self.index = index
+
+    def setName(self, name:str):
+        self.sheetName = name
         
     def execute_change(self)-> bytes:
         """ Remove the sheet protection and return a status code """
@@ -127,6 +143,29 @@ class ExcelSheet():
             return True
         else:
             return False
+        
+    def findSheetName(self)-> dict:
+        startSheets = self.file_data.find('<sheets>') + 8
+        endSheets = self.file_data.find('</sheets>')
+        sheets = self.file_data[startSheets:endSheets]
+        sheetDict = {}
+        process = True
+        while process == True:
+            startSheet = sheets.find('<sheet name=') + 13
+            endsheet = sheets.find('sheetId=') - 2
+            sheetName = sheets[startSheet:endsheet]
+            idEnd = sheets.find('"', endsheet + 11)
+            sheetID = sheets[endsheet + 11: idEnd]
+            sheets = sheets[idEnd:]
+            if startSheet < 13:
+                process = False
+            else:
+                sheetDict[sheetID] = sheetName
+
+        return sheetDict
+
+        
+        
 
 def remove_range_substring(string_to_strip :str, start_substring:str,\
                             end_substring:str) -> str:
