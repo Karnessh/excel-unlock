@@ -75,7 +75,7 @@ class PasswordRemovalWindows(tk.Frame):
         self.sheetList.configure(selectmode='extended')
         self.sheetList.grid(row=1, column=0, columnspan=2, 
                             padx=(10,0), pady=(10,0))
-        test = ttk.Checkbutton(self.sheetList)
+        #test = ttk.Checkbutton(self.sheetList)
         
         self.sheetListScroll = ttk.Scrollbar(middleFrame,
                                             orient=tk.VERTICAL,
@@ -91,6 +91,7 @@ class PasswordRemovalWindows(tk.Frame):
                                        text='Remove protection on selected',
                                        command=self.removedProtectionSelected
                                        )
+        self.buttonSelect.configure(state=tk.DISABLED)
         self.buttonSelect.grid(row=2, column=0, 
                                sticky=tk.W + tk.E, 
                                padx=10, 
@@ -99,6 +100,7 @@ class PasswordRemovalWindows(tk.Frame):
                                     text='Remove protection on all',
                                     command=lambda: 
                                     self.removedProtectionSelected(True))
+        self.buttonAll.configure(state=tk.DISABLED)
         self.buttonAll.grid(row=2,column=1, columnspan=2, 
                             sticky=tk.W + tk.E, padx=10, pady=10)
         
@@ -112,9 +114,10 @@ class PasswordRemovalWindows(tk.Frame):
         bottomFrame.grid(sticky=tk.W + tk.E, padx=10, pady=(0,10), row=2)
 
         #Initializing controls from bottom frame
-        btnChangePath = ttk.Button(bottomFrame, text="Change Path",
+        self.btnChangePath = ttk.Button(bottomFrame, text="Change Path",
                                     command=self.changeSaveFilename)
-        btnChangePath.grid(row=0, column=0, 
+        self.btnChangePath.configure(state=tk.DISABLED)
+        self.btnChangePath.grid(row=0, column=0, 
                            rowspan=2, sticky=tk.W +tk.N + tk.S,
                            padx=10, pady=10)
         
@@ -126,11 +129,17 @@ class PasswordRemovalWindows(tk.Frame):
         textBoxSaveFile.grid(row=1, column=1, sticky=tk.W + tk.E,
                              padx=10, pady=(0,10))
 
-        btnSave = ttk.Button(bottomFrame,text="Execute and Save", 
+        self.btnSave = ttk.Button(bottomFrame,text="Execute and Save", 
                              command=self.saveExcelFile)
-        btnSave.grid(row=0, column=2, rowspan=2,
+        self.btnSave.configure(state=tk.DISABLED)
+        self.btnSave.grid(row=0, column=2, rowspan=2,
                      sticky=tk.N + tk.S + tk.E, padx=10, pady=10)
-        
+    def enableButtons(self):
+        self.buttonSelect.configure(state=tk.ACTIVE)
+        self.buttonAll.configure(state=tk.ACTIVE)
+        self.btnChangePath.configure(state=tk.ACTIVE)
+        self.btnSave.configure(state=tk.ACTIVE)
+
     def saveExcelFile(self):
         filename = self.saveZipFileName.get()
         m.update_file(filename, self.excelfile_list)
@@ -223,10 +232,7 @@ class PasswordRemovalWindows(tk.Frame):
                     self.excelfile_list = []
                     index = 0
                     for list in excel_zipfile.namelist():
-                        if not (list[-3:] == 'xml'):
-                            print(list[-3:])
-                            continue
-                        filedata = excel_zipfile.read(list).decode("utf-8")
+                        filedata = excel_zipfile.read(list)
                         self.excelfile_list.append(
                                             m.ExcelSheet(
                                                         list,
@@ -247,7 +253,7 @@ class PasswordRemovalWindows(tk.Frame):
                                 self.sheetsNameList[sheet.getSheetNumber()])
 
                         
-
+                self.enableButtons()
                 self.refreshSheetList()
 
             else:

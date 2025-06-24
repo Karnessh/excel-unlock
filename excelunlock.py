@@ -33,7 +33,7 @@ if zipfile.is_zipfile(zip_filename):
         print('File opened')
         for list in excel_zipfile.namelist():
            
-            filedata = excel_zipfile.read(list).decode("utf-8")
+            filedata = excel_zipfile.read(list)
             excelfile_list.append(ExcelSheet(list,filedata))
            
 else:
