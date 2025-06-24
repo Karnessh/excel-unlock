@@ -11,11 +11,6 @@ class Application(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.resizable(False,False)
 
- #       ttk.Label(
- #           self,
- #           text="Excel password removal Application",
- #           font=("TkDefaultFont", 16)
-  #      ).grid(row=0)
         self.mainWindow = intf.PasswordRemovalWindows(self)
         self.mainWindow.grid(row=1, padx=10, sticky=(tk.W + tk.E))
 

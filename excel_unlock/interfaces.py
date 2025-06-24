@@ -27,6 +27,7 @@ class PasswordRemovalWindows(tk.Frame):
     excelfile_list: List[m.ExcelSheet] = []
     file:str = ""
     path:str = ""
+    sheetsNameList = {}
     
   
     def __init__(self, parent, *args, **kwargs):
@@ -65,22 +66,16 @@ class PasswordRemovalWindows(tk.Frame):
         middleFrame = ttk.LabelFrame(self, 
                                      text='Workbook and sheets management')
         middleFrame.columnconfigure(0, weight=1)
-        middleFrame.columnconfigure(1, weight=1)
+        middleFrame.columnconfigure(1, weight=2)
+        middleFrame.columnconfigure(2, weight=0)
         middleFrame.grid(sticky=tk.W + tk.E, padx=10, pady=10, row=1)
-        #Initializing controls from middle frame
-        #self.s.configure('Treeview.Heading', foreground="blue")
-        #self.s.configure('Treeheading.cell', background="lightgreen")
-        #print(self.s.layout('Treeview.Heading'))
-        #print(self.s.element_options('Treeheading.cell'))
-        print(self.s.lookup('Treeview.Heading', 'background'))
 
         self.sheetList = w.listview(middleFrame, setup=self.listviewSetup,
                                 show='headings')
         self.sheetList.configure(selectmode='extended')
-        self.sheetList.grid(row=1, columnspan=2, padx=10, pady=(10,0))
+        self.sheetList.grid(row=1, column=0, columnspan=2, 
+                            padx=(10,0), pady=(10,0))
         test = ttk.Checkbutton(self.sheetList)
-        #sheetList.insert("","end","test1", values=('column1', 'column2', test))
-
         
         self.sheetListScroll = ttk.Scrollbar(middleFrame,
                                             orient=tk.VERTICAL,
@@ -88,9 +83,9 @@ class PasswordRemovalWindows(tk.Frame):
                                             style='test.Vertical.TScrollbar'
                                             )
         
-        self.sheetListScroll.grid(row=1, columnspan=2,
+        self.sheetListScroll.grid(row=1, column=2,
                                   sticky=tk.N + tk.S +tk.E,
-                                  padx=10, pady=10)
+                                  padx=(0,10), pady=(10,0))
         self.sheetList.configure(yscrollcommand = self.sheetListScroll.set)
         self.buttonSelect = ttk.Button(middleFrame, 
                                        text='Remove protection on selected',
@@ -104,7 +99,7 @@ class PasswordRemovalWindows(tk.Frame):
                                     text='Remove protection on all',
                                     command=lambda: 
                                     self.removedProtectionSelected(True))
-        self.buttonAll.grid(row=2,column=1, 
+        self.buttonAll.grid(row=2,column=1, columnspan=2, 
                             sticky=tk.W + tk.E, padx=10, pady=10)
         
         
@@ -147,7 +142,6 @@ class PasswordRemovalWindows(tk.Frame):
         self.path = os.path.dirname(filename)
         self.file = os.path.basename(filename)
         self.setSaveFile()
-        print(f'directory is : {self.path} and the file is {self.file}')
         self.refreshFile(filename)
     
     def changeSaveFilename(self):
@@ -158,7 +152,8 @@ class PasswordRemovalWindows(tk.Frame):
                     title='Select an excel file to save to',
                     initialdir=path,
                     initialfile=file)
-        self.saveZipFileName.set(filename)
+        if not (filename == ''):
+            self.saveZipFileName.set(filename)
 
     def loadFile(self):
         filename = filedialog.askopenfilename(defaultextension='.xlsx',
@@ -167,7 +162,6 @@ class PasswordRemovalWindows(tk.Frame):
         self.path = os.path.dirname(filename)
         self.file = os.path.basename(filename)
         self.setSaveFile()
-        print(f'directory is : {self.path} and the file is {self.file}')
         self.refreshFile(filename)
     
     def setSaveFile(self):
@@ -196,13 +190,6 @@ class PasswordRemovalWindows(tk.Frame):
                     split = split + '.'
             newFilename = newFilename + split
         return newFilename
-            
-
-    def checkId(self):
-        # test function, need to remove later   
-        selections = self.sheetList.selection()
-        for selection in selections:
-            print(self.sheetList.item(selection))
 
     def removedProtectionSelected(self, selectall=False):
         if selectall == False:
@@ -213,9 +200,11 @@ class PasswordRemovalWindows(tk.Frame):
         
         for selection in selections:
             sheetListCurrentSelection = self.sheetList.item(selection)
+            
             currentsheet = self.excelfile_list[
                 int(sheetListCurrentSelection['text'])]
             result = currentsheet.set_for_removal()
+            currentsheet.findSheetName()
             message = message + '\n' + result[1]
         messagebox.showinfo('Protection status', message=message)
         self.refreshSheetList()
@@ -231,10 +220,12 @@ class PasswordRemovalWindows(tk.Frame):
                 self.loadedZipfileName.set(file)
 
                 with zipfile.ZipFile(file, mode='r') as excel_zipfile:
-                    print('File opened')
                     self.excelfile_list = []
                     index = 0
                     for list in excel_zipfile.namelist():
+                        if not (list[-3:] == 'xml'):
+                            print(list[-3:])
+                            continue
                         filedata = excel_zipfile.read(list).decode("utf-8")
                         self.excelfile_list.append(
                                             m.ExcelSheet(
@@ -243,7 +234,19 @@ class PasswordRemovalWindows(tk.Frame):
                                                         fromIndex=index
                                                         )
                                                     )
+                        if self.excelfile_list[
+                                        index].check_file_type() == 'workbook':
+                            self.sheetsNameList = self.excelfile_list[
+                                        index].findSheetName()
                         index += 1
+                    for sheet in self.excelfile_list:
+                        if sheet.get_file_type() == 'worksheet':
+                            #print(sheet.getSheetNumber())
+                            #print(self.sheetsNameList[sheet.getSheetNumber()])
+                            sheet.setName(
+                                self.sheetsNameList[sheet.getSheetNumber()])
+
+                        
 
                 self.refreshSheetList()
 
