@@ -7,18 +7,23 @@ class ExcelSheet():
     sheetName:str = ''
     sheetNumber:int = 0
     file_data:str = ''
+    fileDataBytes:bytes = b''
     index:int = 0
     is_protected:bool = False
     is_for_protection_removal:bool = False
     protection_string:str = ''
     removal:str = ''
+    isXmlFile = False
     
 
-    def __init__(self, filename_path:str, file_data:str , 
+    def __init__(self, filename_path:str, file_data:bytes , 
                  fromIndex = 0) -> None:
         """ Initializing class and checking sheet protection """
         self.filename_path = filename_path
-        self.file_data = file_data
+        self.fileDataBytes = file_data
+        if self.filename_path[-3:] == 'xml':
+            self.file_data = self.fileDataBytes.decode("utf-8")
+            self.isXmlFile = True
         self.file_type = self.check_file_type()
         self.is_protected = self.check_protection()
         self.index = fromIndex
@@ -28,7 +33,7 @@ class ExcelSheet():
     def findSheetNumber(self):
         result = self.filename_path.split('.')
         self.sheetNumber = int(result[0][19:])
-        print(self.sheetNumber)
+        #print(self.sheetNumber)
     
     def get_is_protected(self)-> bool:
         """ Return if the sheet is protected """
@@ -97,8 +102,9 @@ class ExcelSheet():
                             self.protection_string, '/>')
             self.is_protected = False
             self.is_for_protection_removal = False
+            self.fileDataBytes = self.get_file_data().encode('utf-8')
 
-        return self.get_file_data().encode('utf-8')
+        return self.fileDataBytes
     
     def check_file_type(self) -> str:
         """ Define the type of file """
@@ -154,8 +160,11 @@ class ExcelSheet():
             startSheet = sheets.find('<sheet name=') + 13
             endsheet = sheets.find('sheetId=') - 2
             sheetName = sheets[startSheet:endsheet]
-            idEnd = sheets.find('"', endsheet + 11)
-            sheetID = sheets[endsheet + 11: idEnd]
+            idStart = sheets.find('r:id=')
+            idEnd = sheets.find('"', idStart + 9)
+            sheetID = sheets[idStart + 9: idEnd]
+            print(sheets)
+            print(f'idstart={idStart}, idend={idEnd}, sheetID={sheetID}')
             sheets = sheets[idEnd:]
             if startSheet < 13:
                 process = False
@@ -201,7 +210,8 @@ def validate_choice(choice:str, range_of:int) -> bool:
     return False 
 
 def update_file(zip_filename:str, excel_list):
-    with zipfile.ZipFile(zip_filename, mode='w') as excel_zipfile:
+    with zipfile.ZipFile(zip_filename, mode='w', 
+                         compression=zipfile.ZIP_DEFLATED) as excel_zipfile:
         for excel_file in excel_list:
             with excel_zipfile.open(excel_file.get_filename_path(), 'w') \
               as sheet:
